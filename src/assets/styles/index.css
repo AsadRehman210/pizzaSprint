@@ -1,0 +1,47 @@
+
+body {
+  font-family: 'Montserrat', serif;
+  background-color: #F3F3F3;
+}
+
+.font-poppins{
+  font-family: "Poppins", serif;
+}
+.font-mon{
+  font-family: 'Montserrat', serif;
+}
+
+/* Add this in your global CSS or Tailwind config */
+.scrollbar-thin {
+    scrollbar-width: 2px; /* Firefox */
+  }
+  
+  .scrollbar-thumb-gray-400 {
+    scrollbar-color: #00274D transparent; /* Firefox */
+  }
+  
+  .scrollbar-track-gray-200 {
+    scrollbar-color: transparent #00274D; /* Firefox */
+  }
+  /* For Chrome/Edge/Safari */
+::-webkit-scrollbar {
+  width: 5px; /* Set scrollbar width to 5px */
+  height: 5px; /* Optional: Set scrollbar height for horizontal scrollbars */
+}
+  
+  /* For Chrome/Edge/Safari */
+  ::-webkit-scrollbar {
+    height: 8px; /* Adjust the height of the scrollbar */
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #00274D;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+.sticky-height{
+  height: calc(100vh-80px);
+}
+    
