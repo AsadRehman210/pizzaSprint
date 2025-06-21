@@ -5,10 +5,21 @@ import InfoModal from "../modals/InfoModal";
 import { useSelector } from "react-redux";
 import { selectDeliveryStatus } from "../../redux/slice/authSlice";
 
-const FoodCard = ({ item, onPizzaClick, setIsInfoModalTriggered }) => {
+const FoodCard = ({
+  item,
+  onPizzaClick,
+  setIsInfoModalTriggered,
+  discount,
+}) => {
   const isDelivery = useSelector(selectDeliveryStatus);
-  const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const cart = useSelector((state) => state.pizza.cart);
+  // console.log("cart", cart);
 
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
+  // Find this item in the cart
+  const cartItem = cart.find(
+    (cartItem) => cartItem.selectedPizzaDetail.items.id === item.id
+  );
   // Function to open the info modal
   const openInfoModal = (e) => {
     e.stopPropagation();
@@ -30,8 +41,14 @@ const FoodCard = ({ item, onPizzaClick, setIsInfoModalTriggered }) => {
     <div
       key={item.id}
       onClick={() => onPizzaClick(item)}
-      className="bg-white hover:bg-yellow-50 p-3 rounded-lg shadow hover:shadow-xl transition duration-200 flex items-center gap-[1.438rem] cursor-pointer"
+      className="relative border-2 bg-white hover:bg-yellow-50 p-3 rounded-lg shadow hover:shadow-xl transition duration-200 flex items-center gap-[1.438rem] cursor-pointer"
     >
+      {/* show number of quantity */}
+      {cartItem && (
+        <div className="absolute -top-2 -left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-md z-10 shadow">
+          {cartItem.quantity}
+        </div>
+      )}
       <div className="w-[4.5rem] h-[4.5rem]">
         <img
           src={pizza}
@@ -55,12 +72,15 @@ const FoodCard = ({ item, onPizzaClick, setIsInfoModalTriggered }) => {
           <span className="text-sm font-medium mr-2">
             {getPrice(item?.price[0])?.toFixed(2)}€
           </span>
-          <span className="text-[0.625rem] font-medium line-through">
-            {/* {(
-              item.originalPrice +
-              item.originalPrice * (item.discountedPrice / 100)
-            ).toFixed(2)} */}
-          </span>
+          {discount?.amount && (
+            <span className="text-[0.625rem] font-medium line-through">
+              {(
+                getPrice(item?.price[0]) +
+                getPrice(item?.price[0]) * (discount?.amount / 100)
+              ).toFixed(2)}{" "}
+              €
+            </span>
+          )}
         </div>
       </div>
       {/* Info Modal is conditionally rendered */}

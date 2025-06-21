@@ -7,14 +7,16 @@ import {
   selectDeliveryArea,
   setDeliveryMode,
 } from "../../redux/slice/authSlice";
+import ServiceChangeModal from "../modals/ServiceChangeModal";
+// import ServiceChangeModal from "./ServiceChangeModal";
 
-const DeliveryPickupForm = () => {
+const DeliveryPickupForm = ({ selectedArea, setSelectedArea }) => {
   const dispatch = useDispatch();
   const DeliveryArea = useSelector(selectDeliveryArea);
   const [dates, setDates] = useState([]);
   const [times, setTimes] = useState([]);
   const [isDelivery, setIsDelivery] = useState(true);
-  const [selectedArea, setSelectedArea] = useState(null);
+  // const [selectedArea, setSelectedArea] = useState(null);
 
   // State for tracking which select is focused
   const [focusedSelect, setFocusedSelect] = useState({
@@ -23,7 +25,10 @@ const DeliveryPickupForm = () => {
     time: false,
   });
 
-  // Initialize dates and times
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [pendingDeliveryChange, setPendingDeliveryChange] = useState(null);
+
   useEffect(() => {
     setDates(generateDates());
     setTimes(generateTimes());
@@ -33,8 +38,22 @@ const DeliveryPickupForm = () => {
   }, []);
 
   const handleDeliveryChange = (delivery) => {
-    setIsDelivery(delivery);
-    dispatch(setDeliveryMode(delivery));
+    if (delivery !== isDelivery) {
+      setPendingDeliveryChange(delivery);
+      setShowModal(true);
+    }
+  };
+
+  const confirmDeliveryChange = () => {
+    setIsDelivery(pendingDeliveryChange);
+    dispatch(setDeliveryMode(pendingDeliveryChange));
+    setShowModal(false);
+    setPendingDeliveryChange(null);
+  };
+
+  const cancelDeliveryChange = () => {
+    setShowModal(false);
+    setPendingDeliveryChange(null);
   };
 
   const handleAreaChange = (e) => {
@@ -50,7 +69,7 @@ const DeliveryPickupForm = () => {
     for (let i = 0; i < 7; i++) {
       const date = new Date();
       date.setDate(today.getDate() + i);
-      weekDates.push(date.toISOString().slice(0, 10)); // Format: YYYY-MM-DD
+      weekDates.push(date.toISOString().slice(0, 10));
     }
     return weekDates;
   };
@@ -59,22 +78,22 @@ const DeliveryPickupForm = () => {
   const generateTimes = () => {
     const timeSlots = [];
     let startTime = new Date();
-    startTime.setHours(8, 0, 0, 0); // Start at 8:00 AM
+    startTime.setHours(8, 0, 0, 0);
     const endTime = new Date();
-    endTime.setHours(20, 0, 0, 0); // End at 8:00 PM
+    endTime.setHours(20, 0, 0, 0);
 
     while (startTime <= endTime) {
-      timeSlots.push(startTime.toTimeString().slice(0, 5)); // Format: HH:MM
-      startTime = new Date(startTime.getTime() + 30 * 60000); // Add 30 minutes
+      timeSlots.push(startTime.toTimeString().slice(0, 5));
+      startTime = new Date(startTime.getTime() + 30 * 60000);
     }
     return timeSlots;
   };
 
   // Initialize dates and times
-  React.useEffect(() => {
-    setDates(generateDates());
-    setTimes(generateTimes());
-  }, []);
+  // React.useEffect(() => {
+  //   setDates(generateDates());
+  //   setTimes(generateTimes());
+  // }, []);
 
   // Handler for select focus
   const handleSelectFocus = (selectName) => {
@@ -83,14 +102,6 @@ const DeliveryPickupForm = () => {
       [selectName]: true,
     }));
   };
-
-  // Handler for select blur
-  // const handleSelectBlur = (selectName) => {
-  //   setFocusedSelect((prev) => ({
-  //     ...prev,
-  //     [selectName]: false,
-  //   }));
-  // };
 
   return (
     <div className="h-full mx-auto my-0 lg:my-6 font-mon">
@@ -106,7 +117,7 @@ const DeliveryPickupForm = () => {
           </button>
           <button
             className={`px-4 py-3.5 w-1/2 rounded-lg text-base ${
-              !isDelivery ? "bg-[#00274D] rounded-lg text-white" : ""
+              !isDelivery ? "bg-[#00274D] text-white" : ""
             }`}
             onClick={() => handleDeliveryChange(false)}
           >
@@ -216,6 +227,14 @@ const DeliveryPickupForm = () => {
       </div>
 
       <OrderDetails selectedArea={selectedArea} />
+
+      {/* Modal */}
+      {showModal && (
+        <ServiceChangeModal
+          onConfirm={confirmDeliveryChange}
+          onCancel={cancelDeliveryChange}
+        />
+      )}
     </div>
   );
 };

@@ -16,6 +16,8 @@ import {
 import LoaderContainer from "./components/common/LoaderContainer";
 import { setupInterceptors } from "./api";
 import Contact from "./pages/Contact";
+import ScrollToTop from "./components/common/ScrollToTop";
+import Topbutton from "./components/common/Topbutton";
 
 const Home = lazy(() => import("./pages/Home"));
 
@@ -68,6 +70,7 @@ function App() {
     >
       <Suspense fallback={<LoaderContainer />}>
         {isAuthenticated && <Header />}
+        <ScrollToTop />
         <Routes>
           <Route
             path="/"
@@ -102,6 +105,7 @@ function App() {
           />
         </Routes>
         {isAuthenticated && <Footer />}
+        <Topbutton />
       </Suspense>
     </ErrorBoundary>
   );

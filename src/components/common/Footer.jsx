@@ -34,7 +34,7 @@ const Footer = () => {
               <IoLocationOutline className=" !text-xl" />
             </div>
             <p className="text-base">
-              {restaurantInfo?.street} {restaurantInfo?.house_number}{" "}
+              {restaurantInfo?.street} {restaurantInfo?.house_number},{" "}
               {restaurantInfo?.zipcode} {restaurantInfo?.city}
             </p>
           </a>

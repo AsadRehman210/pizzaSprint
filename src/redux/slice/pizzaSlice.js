@@ -1,9 +1,45 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isDelivery: true, // Default to delivery
+  isDelivery: true,
   cart: [],
   totalAmount: 0,
+};
+
+const calculatePizzaTotal = (pizza) => {
+  try {
+    // Safely parse base price with fallback to 0
+    let total = parseFloat(pizza.price || 0) || 0;
+
+    // Calculate extras price
+    const extrasTotal = (pizza.extras || []).reduce((sum, group) => {
+      const groupTotal = (group.selectedExtras || []).reduce(
+        (groupSum, extra) => {
+          return groupSum + (parseFloat(extra.price) || 0);
+        },
+        0
+      );
+      return sum + groupTotal;
+    }, 0);
+
+    // Calculate deal extras price
+    const dealExtrasTotal = (pizza.dealExtras || []).reduce((sum, group) => {
+      const groupTotal = (group.selectedExtras || []).reduce(
+        (groupSum, extra) => {
+          return groupSum + (parseFloat(extra.price) || 0);
+        },
+        0
+      );
+      return sum + groupTotal;
+    }, 0);
+
+    return (
+      (total + extrasTotal + dealExtrasTotal) * (parseInt(pizza.quantity) || 1)
+    );
+  } catch (error) {
+    console.error("Error calculating pizza total:", error);
+    return 0;
+  }
 };
 
 const pizzaSlice = createSlice({
@@ -15,73 +51,99 @@ const pizzaSlice = createSlice({
     },
 
     addPizzaToCart: (state, action) => {
-      const pizzaData = action.payload;
+      const newPizza = action.payload;
 
-      const existingPizza = state.cart.find(
+      // Find existing pizza by category ID and item ID
+      const existingIndex = state.cart.findIndex(
         (pizza) =>
-          pizza.id === pizzaData.id &&
-          pizza.sizes[0].size === pizzaData.sizes[0].size &&
-          JSON.stringify(pizza.extras) === JSON.stringify(pizzaData.extras)
+          pizza.id === newPizza.id &&
+          pizza.selectedPizzaDetail?.items?.id ===
+            newPizza.selectedPizzaDetail?.items?.id
       );
 
-      if (existingPizza) {
-        existingPizza.quantity += pizzaData.quantity;
-        existingPizza.totalPrice += pizzaData.totalPrice;
+      if (existingIndex >= 0) {
+        // Update the existing pizza with new data
+        state.cart[existingIndex] = {
+          ...newPizza,
+          // Preserve the original ID
+          id: state.cart[existingIndex].id,
+        };
       } else {
-        state.cart.push(pizzaData);
+        // Add new pizza if it doesn't exist
+        state.cart.push(newPizza);
       }
 
-      state.totalAmount = state.cart.reduce((total, order) => {
-        return total + (order.totalPrice || order.price * order.quantity);
-      }, 0);
+      // Recalculate total amount
+      state.totalAmount = state.cart.reduce(
+        (total, pizza) => total + calculatePizzaTotal(pizza),
+        0
+      );
     },
-
     removePizzaFromCart: (state, action) => {
-      const { id, size, extras } = action.payload;
+      const { id, sizeId, extras, dealExtras, selectedPizzaDetail } =
+        action.payload;
       state.cart = state.cart.filter(
         (pizza) =>
           !(
             pizza.id === id &&
-            pizza.sizes[0].size === size &&
-            JSON.stringify(pizza.extras) === JSON.stringify(extras)
+            pizza.selectedPizzaDetail?.items?.id ===
+              selectedPizzaDetail?.items?.id &&
+            pizza.sizes[0]?.sizeId === sizeId &&
+            JSON.stringify(pizza.extras) === JSON.stringify(extras) &&
+            JSON.stringify(pizza.dealExtras) === JSON.stringify(dealExtras)
           )
       );
-
-      state.totalAmount = state.cart.reduce((total, order) => {
-        return total + (order.totalPrice || order.price * order.quantity);
-      }, 0);
+      state.totalAmount = state.cart.reduce(
+        (total, pizza) => total + calculatePizzaTotal(pizza),
+        0
+      );
     },
 
     updatePizzaQuantity: (state, action) => {
-      const { id, size, extras, quantity } = action.payload;
-
-      const existingPizza = state.cart.find(
+      const { id, sizeId, extras, dealExtras, quantity, selectedPizzaDetail } =
+        action.payload;
+      const pizza = state.cart.find(
         (pizza) =>
           pizza.id === id &&
-          pizza.sizes[0].size === size &&
-          JSON.stringify(pizza.extras) === JSON.stringify(extras)
+          pizza.selectedPizzaDetail?.items?.id ===
+            selectedPizzaDetail?.items?.id &&
+          pizza.sizes[0]?.sizeId === sizeId &&
+          JSON.stringify(pizza.extras) === JSON.stringify(extras) &&
+          JSON.stringify(pizza.dealExtras) === JSON.stringify(dealExtras)
       );
 
-      if (existingPizza) {
-        existingPizza.quantity = quantity;
-        existingPizza.totalPrice = existingPizza.price * quantity;
+      if (pizza) {
+        pizza.quantity = quantity;
+        pizza.totalPrice = calculatePizzaTotal(pizza);
       }
 
-      state.totalAmount = state.cart.reduce((total, order) => {
-        return total + (order.totalPrice || order.price * order.quantity);
-      }, 0);
+      state.totalAmount = state.cart.reduce(
+        (total, pizza) => total + calculatePizzaTotal(pizza),
+        0
+      );
     },
 
     updateCartPricesForDeliveryStatus: (state) => {
-      state.cart.forEach((item) => {
-        // Update the price based on current delivery status
-        item.price = state.isDelivery
-          ? item.sizes[0].deliveryPrice
-          : item.sizes[0].takeAwayPrice;
+      state.cart.forEach((pizza) => {
+        // Update base price
+        if (pizza.sizes.length > 0) {
+          pizza.price = state.isDelivery
+            ? pizza.sizes[0]?.deliveryPrice
+            : pizza.sizes[0]?.takeAwayPrice;
+        }
 
         // Update extras prices
-        item.extras.forEach((group) => {
-          group.selectedExtras.forEach((extra) => {
+        pizza.extras?.forEach((group) => {
+          group.selectedExtras?.forEach((extra) => {
+            extra.price = state.isDelivery
+              ? extra.deliveryPrice
+              : extra.takeAwayPrice;
+          });
+        });
+
+        // Update deal extras prices
+        pizza.dealExtras?.forEach((group) => {
+          group.selectedExtras?.forEach((extra) => {
             extra.price = state.isDelivery
               ? extra.deliveryPrice
               : extra.takeAwayPrice;
@@ -89,19 +151,18 @@ const pizzaSlice = createSlice({
         });
 
         // Recalculate total price
-        let singleItemPrice = item.price;
-        item.extras.forEach((group) => {
-          group.selectedExtras.forEach((extra) => {
-            singleItemPrice += extra.price;
-          });
-        });
-
-        item.totalPrice = singleItemPrice * item.quantity;
+        pizza.totalPrice = calculatePizzaTotal(pizza);
       });
 
-      state.totalAmount = state.cart.reduce((total, order) => {
-        return total + order.totalPrice;
-      }, 0);
+      state.totalAmount = state.cart.reduce(
+        (total, pizza) => total + pizza.totalPrice,
+        0
+      );
+    },
+
+    clearCart: (state) => {
+      state.cart = [];
+      state.totalAmount = 0;
     },
   },
 });
@@ -112,6 +173,7 @@ export const {
   updatePizzaQuantity,
   setDeliveryStatus,
   updateCartPricesForDeliveryStatus,
+  clearCart,
 } = pizzaSlice.actions;
 
 export default pizzaSlice.reducer;

@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { showRestaurantInfo } from "../../redux/slice/authSlice";
 import { FiClock } from "react-icons/fi";
-import InfoModal from "../modals/InfoModal";
 import RestuarantTimingModal from "../modals/RestuarantTimingModal";
+import { BASE_URL } from "../../global/Config";
 
 const HeroSection = () => {
   const restaurantInfo = useSelector(showRestaurantInfo);
@@ -16,7 +16,7 @@ const HeroSection = () => {
       <div
         className="relative bg-cover bg-center sm:h-[21.563rem] h-[11.438rem]"
         style={{
-          backgroundImage: `url(${restaurantInfo?.bannerUrl})`,
+          backgroundImage: `url(${BASE_URL}${restaurantInfo?.bannerUrl})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -24,13 +24,13 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="container mx-auto relative z-10 flex flex-col h-full px-4 xl:px-28">
           <div className="flex-1 flex flex-col justify-center items-start">
-            <h1 className="text-white text-2xl sm:text-5xl font-semibold max-w-[48rem]">
+            {/* <h1 className="text-white text-2xl sm:text-5xl font-semibold max-w-[48rem]">
               Delicious Fast Food, Delivered Fast!
             </h1>
             <p className="text-white mt-4 text-sm sm:text-2xl font-normal max-w-[40.5rem]">
               From juicy burgers to cheesy pizzas, satisfy your cravings with
               just one click!
-            </p>
+            </p> */}
           </div>
           <div className="pb-4 flex gap-6 items-center">
             <p

@@ -2,12 +2,13 @@ import { FiPhone } from "react-icons/fi";
 import { IoLocationOutline } from "react-icons/io5";
 import { useSelector } from "react-redux";
 import { showRestaurantInfo } from "../redux/slice/authSlice";
+import React from "react";
 
 export default function Contact() {
   const restaurantInfo = useSelector(showRestaurantInfo);
   const constructAddress = () => {
     if (!restaurantInfo) return "";
-    return `${restaurantInfo?.street} ${restaurantInfo?.house_number}, ${restaurantInfo?.zipcode} ${restaurantInfo?.city}`;
+    return `${restaurantInfo?.street} ${restaurantInfo?.house_number}, {" "} ${restaurantInfo?.zipcode} ${restaurantInfo?.city}`;
   };
   return (
     <div className="bg-white py-10">
@@ -23,7 +24,7 @@ export default function Contact() {
               <div className="text-[0.875rem] font-bold">Abholung</div>
               <div className="text-[0.875rem] font-bold">Lieferung</div>
               {restaurantInfo?.restaurantOpeningHours?.map((item, index) => (
-                <div key={index}>
+                <React.Fragment key={index}>
                   <div className="text-[0.875rem] font-bold">
                     {item.weekDay}
                   </div>
@@ -35,7 +36,7 @@ export default function Contact() {
                     {item.takeawayHours[0].startTime} -{" "}
                     {item.takeawayHours[0].endedAt}
                   </div>
-                </div>
+                </React.Fragment>
               ))}
             </div>
           </div>
@@ -56,7 +57,7 @@ export default function Contact() {
                   <IoLocationOutline className=" text-xl" />
                 </div>
                 <p className="text-base">
-                  {restaurantInfo?.street} {restaurantInfo?.house_number}
+                  {restaurantInfo?.street} {restaurantInfo?.house_number},{" "}
                   {restaurantInfo?.zipcode} {restaurantInfo?.city}
                 </p>
               </a>

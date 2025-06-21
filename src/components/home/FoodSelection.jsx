@@ -4,29 +4,95 @@ import FoodCategories from "./FoodCategories";
 import search from "../../assets/images/search.svg";
 import OrderDetailsModal from "../modals/OrderDetailsModal";
 import { useSelector } from "react-redux";
-import { showMenu } from "../../redux/slice/authSlice";
+import { selectDeliveryStatus, showMenu } from "../../redux/slice/authSlice";
+import { toast } from "react-toastify";
 
 const FoodSelection = () => {
+  const [selectedArea, setSelectedArea] = useState(null);
   const allMenuItems = useSelector(showMenu);
   const [searchTerm, setSearchTerm] = useState("");
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const totalAmount = useSelector((state) => state.pizza.totalAmount);
+  const cart = useSelector((state) => state.pizza.cart);
+  const isDelivery = useSelector(selectDeliveryStatus);
+
+  const totalAmount = cart.reduce((total, item) => {
+    const sizePrice = isDelivery
+      ? item.sizes[0]?.deliveryPrice
+      : item.sizes[0]?.takeAwayPrice;
+
+    const extrasPrice = item.extras.reduce((sum, group) => {
+      return (
+        sum +
+        group.selectedExtras.reduce((groupSum, extra) => {
+          return groupSum + (extra?.price || 0);
+        }, 0)
+      );
+    }, 0);
+    const dealExtrasPrice = item.dealExtras.reduce((sum, group) => {
+      return (
+        sum +
+        group.selectedExtras.reduce((groupSum, extra) => {
+          return groupSum + (extra?.price || 0);
+        }, 0)
+      );
+    }, 0);
+
+    return (
+      total + ((sizePrice || 0) + extrasPrice + dealExtrasPrice) * item.quantity
+    );
+  }, 0);
 
   // Filter menu items based on search term
+  // const filteredMenu = useMemo(() => {
+  //   if (!searchTerm) return allMenuItems;
+
+  //   return allMenuItems
+  //     .map((category) => {
+  //       // If category name matches, include all items
+  //       if (category.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+  //         return category;
+  //       }
+  //       // Otherwise filter items
+  //       return {
+  //         ...category,
+  //         items: category.items.filter(
+  //           (item) =>
+  //             item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //             (item.description &&
+  //               item.description
+  //                 .toLowerCase()
+  //                 .includes(searchTerm.toLowerCase()))
+  //         ),
+  //       };
+  //     })
+  //     .filter((category) => category.items.length > 0);
+  // }, [allMenuItems, searchTerm]);
+
   const filteredMenu = useMemo(() => {
     if (!searchTerm) return allMenuItems;
 
-    return allMenuItems
+    const term = searchTerm.toLowerCase();
+
+    // First, try to match items
+    const itemMatchedMenu = allMenuItems
       .map((category) => ({
         ...category,
         items: category.items.filter(
           (item) =>
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.description &&
-              item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+            item.name.toLowerCase().includes(term) ||
+            (item.description && item.description.toLowerCase().includes(term))
         ),
       }))
       .filter((category) => category.items.length > 0);
+
+    if (itemMatchedMenu.length > 0) {
+      return itemMatchedMenu;
+    }
+
+    // If no item matched, fallback to matching categories
+    return allMenuItems.filter((category) =>
+      category.name.toLowerCase().includes(term)
+    );
   }, [allMenuItems, searchTerm]);
 
   const handleSearch = (e) => {
@@ -35,6 +101,32 @@ const FoodSelection = () => {
 
   const openOrderModal = () => setIsOrderModalOpen(true);
   const closeOrderModal = () => setIsOrderModalOpen(false);
+
+  // Check if order meets minimum amount
+  const meetsMinimum =
+    !isDelivery ||
+    !selectedArea ||
+    totalAmount >= selectedArea.minimumOrderAmount;
+
+  const handleCheckoutClick = () => {
+    if (!meetsMinimum) {
+      toast.error(
+        `Minimum order amount is ${selectedArea?.minimumOrderAmount.toFixed(
+          2
+        )} €`
+      );
+      return;
+    }
+    console.log("Selected Items:", cart);
+    console.log("Detailed Order Info:", {
+      items: cart,
+      totalAmount: totalAmount.toFixed(2),
+      isDelivery,
+      selectedArea,
+    });
+
+    openOrderModal();
+  };
 
   return (
     <div className="bg-[#F3F3F3] py-4 h-full">
@@ -59,14 +151,17 @@ const FoodSelection = () => {
           <FoodCategories menu={filteredMenu} />
         </div>
         <div className="order-1 lg:order-2 h-auto" style={{ flex: "2 1 35%" }}>
-          <DeliveryPickupForm />
+          <DeliveryPickupForm
+            selectedArea={selectedArea}
+            setSelectedArea={setSelectedArea}
+          />
         </div>
       </div>
       <div className="sticky bottom-2 flex lg:hidden">
         <div className="container mx-auto px-4 xl:px-28">
           <button
             className="w-full text-white py-3 rounded mt-6 text-lg font-medium bg-[#00274D] active:bg-[#001C3A] flex justify-between px-4"
-            onClick={openOrderModal}
+            onClick={handleCheckoutClick}
           >
             <p>Check the selected products</p>
             <p>€ {totalAmount.toFixed(2)}</p>

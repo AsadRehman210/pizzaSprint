@@ -6,26 +6,35 @@ import { toast } from "react-toastify";
 
 const OrderDetails = ({ selectedArea }) => {
   const cart = useSelector((state) => state.pizza.cart);
+  console.log("cart detail", cart);
   const isDelivery = useSelector(selectDeliveryStatus);
 
   // Calculate total amount
   const totalAmount = cart.reduce((total, item) => {
     const sizePrice = isDelivery
-      ? item.sizes[0].deliveryPrice
-      : item.sizes[0].takeAwayPrice;
+      ? item.sizes[0]?.deliveryPrice
+      : item.sizes[0]?.takeAwayPrice;
 
     const extrasPrice = item.extras.reduce((sum, group) => {
       return (
         sum +
         group.selectedExtras.reduce((groupSum, extra) => {
-          return (
-            groupSum + (isDelivery ? extra.deliveryPrice : extra.takeAwayPrice)
-          );
+          return groupSum + (extra?.price || 0);
+        }, 0)
+      );
+    }, 0);
+    const dealExtrasPrice = item.dealExtras.reduce((sum, group) => {
+      return (
+        sum +
+        group.selectedExtras.reduce((groupSum, extra) => {
+          return groupSum + (extra?.price || 0);
         }, 0)
       );
     }, 0);
 
-    return total + (sizePrice + extrasPrice) * item.quantity;
+    return (
+      total + ((sizePrice || 0) + extrasPrice + dealExtrasPrice) * item.quantity
+    );
   }, 0);
 
   // Calculate progress towards minimum order amount

@@ -8,6 +8,7 @@ const FoodMenu = () => {
   const [clicked, setClicked] = useState(false);
   const menuRef = useRef(null);
   const Menu = useSelector(showMenu);
+  console.log("Menu", Menu);
 
   const handleMenuClick = (index) => {
     setActiveIndex(index);

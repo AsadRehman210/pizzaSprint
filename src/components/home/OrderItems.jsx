@@ -2,65 +2,101 @@ import React, { useState } from "react";
 import pizza from "../../assets/images/pizza.png";
 import discounted from "../../assets/images/discount.svg";
 import { useDispatch, useSelector } from "react-redux";
-import { removePizza, updateQuantity } from "../../redux/actions/PizzaActions";
+// import { removePizza, updateQuantity } from "../../redux/actions/PizzaActions";
 import message from "../../assets/images/message.svg";
 import MessageModal from "../modals/MessageModal";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
 import { selectDeliveryStatus } from "../../redux/slice/authSlice";
+import PizzaSelectedModal from "../modals/PizzaSelectedModal";
+import {
+  removePizzaFromCart,
+  updatePizzaQuantity,
+} from "../../redux/slice/pizzaSlice";
 
 const OrderItem = ({
   id,
   name,
+  dealSize,
   sizes,
   extras,
+  dealExtras,
   totalPrice,
   discountedPrice,
   quantity,
+  selectedPizzaDetail,
 }) => {
   const dispatch = useDispatch();
   const isDelivery = useSelector(selectDeliveryStatus);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productName, setProductName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   // Calculate the price based on delivery status
   const calculateCurrentPrice = () => {
-    // Base price from size
-    const sizePrice = isDelivery
-      ? sizes[0].deliveryPrice
-      : sizes[0].takeAwayPrice;
+    try {
+      // Base price from size with fallback
+      const sizePrice =
+        parseFloat(
+          isDelivery
+            ? sizes[0]?.deliveryPrice || 0
+            : sizes[0]?.takeAwayPrice || 0
+        ) || 0;
 
-    // Add extras prices
-    const extrasPrice = extras.reduce((sum, group) => {
-      return (
-        sum +
-        group.selectedExtras.reduce((groupSum, extra) => {
-          return (
-            groupSum + (isDelivery ? extra.deliveryPrice : extra.takeAwayPrice)
-          );
-        }, 0)
-      );
-    }, 0);
+      // Calculate extras price
+      const extrasPrice = extras.reduce((total, group) => {
+        const groupTotal = (group.selectedExtras || []).reduce((sum, extra) => {
+          // Use the direct price from extra object
+          return sum + (parseFloat(extra.price) || 0);
+        }, 0);
+        return total + groupTotal;
+      }, 0);
+      const DealExtrasPrice = dealExtras.reduce((total, group) => {
+        const groupTotal = (group.selectedExtras || []).reduce((sum, extra) => {
+          // Use the direct price from extra object
+          return sum + (parseFloat(extra.price) || 0);
+        }, 0);
+        return total + groupTotal;
+      }, 0);
 
-    return (sizePrice + extrasPrice) * quantity;
+      return (sizePrice + extrasPrice + DealExtrasPrice) * quantity;
+    } catch (error) {
+      console.error("Error calculating current price:", error);
+      return 0;
+    }
   };
 
   const calculateOriginalPrice = () => {
-    // Base price from size
-    const sizePrice = sizes[0].deliveryPrice; // Using delivery price as original
+    try {
+      // Base price from size with fallback
+      const sizePrice = parseFloat(sizes[0]?.deliveryPrice || 0) || 0;
 
-    // Add extras prices
-    const extrasPrice = extras.reduce((sum, group) => {
-      return (
-        sum +
-        group.selectedExtras.reduce((groupSum, extra) => {
-          return groupSum + extra.deliveryPrice;
-        }, 0)
-      );
-    }, 0);
+      // Calculate extras price
+      const extrasPrice = extras.reduce((total, group) => {
+        const groupTotal = (group.selectedExtras || []).reduce((sum, extra) => {
+          // Use the direct price from extra object
+          return sum + (parseFloat(extra.price) || 0);
+        }, 0);
+        return total + groupTotal;
+      }, 0);
+      const dealExtrasPrice = dealExtras.reduce((total, group) => {
+        const groupTotal = (group.selectedExtras || []).reduce((sum, extra) => {
+          // Use the direct price from extra object
+          return sum + (parseFloat(extra.price) || 0);
+        }, 0);
+        return total + groupTotal;
+      }, 0);
 
-    return (sizePrice + extrasPrice) * quantity;
+      return (sizePrice + extrasPrice + dealExtrasPrice) * quantity;
+    } catch (error) {
+      console.error("Error calculating original price:", error);
+      return 0;
+    }
   };
 
   const currentPrice = calculateCurrentPrice();
@@ -68,18 +104,46 @@ const OrderItem = ({
 
   const handleIncreaseQuantity = () => {
     const newQuantity = quantity + 1;
-    dispatch(updateQuantity(id, sizes[0].size, extras, newQuantity));
+    dispatch(
+      updatePizzaQuantity({
+        id,
+        sizeId: sizes[0]?.sizeId,
+        extras,
+        dealExtras,
+        quantity: newQuantity,
+        selectedPizzaDetail,
+      })
+    );
   };
 
   const handleDecreaseQuantity = () => {
     if (quantity > 1) {
       const newQuantity = quantity - 1;
-      dispatch(updateQuantity(id, sizes[0].size, extras, newQuantity));
+      dispatch(
+        updatePizzaQuantity({
+          id,
+          sizeId: sizes[0]?.sizeId,
+          extras,
+          dealExtras,
+          quantity: newQuantity,
+          selectedPizzaDetail,
+        })
+      );
+    } else {
+      setIsDeleteModalOpen(true);
     }
   };
 
   const handleRemoveItem = () => {
-    dispatch(removePizza(id, sizes[0].size, extras));
+    dispatch(
+      removePizzaFromCart({
+        id,
+        sizeId: sizes[0]?.sizeId,
+        extras,
+        dealExtras,
+        selectedPizzaDetail,
+      })
+    );
     setIsDeleteModalOpen(false);
   };
 
@@ -101,17 +165,29 @@ const OrderItem = ({
     group.selectedExtras.map((extra) => ({
       name: extra.name,
       groupName: group.groupName,
-      price: isDelivery ? extra.deliveryPrice : extra.takeAwayPrice,
+      price: isDelivery ? extra?.deliveryPrice : extra?.takeAwayPrice,
     }))
   );
 
+  const allSelectedDealExtras = dealExtras.flatMap((group) =>
+    group.selectedExtras.map((extra) => ({
+      groupId: group.groupId,
+      name: extra.name,
+      groupName: group.groupName,
+      price: extra.price,
+      extraId: extra.id,
+    }))
+  );
   return (
     <div className="flex flex-col gap-2 items-center justify-start border-b-2 border-[#D8D8D8] pb-4 mb-4">
-      <div className="flex items-center justify-between gap-4 w-full">
+      <div
+        className="flex items-center justify-between gap-4 w-full"
+        onClick={() => setIsModalOpen(true)}
+      >
         <div className="flex-1">
           <h3 className="text-base lg:text-xl font-semibold">{name}</h3>
           <p className="text-xs lg:text-sm font-medium font-poppins">
-            {sizes[0].size}
+            {sizes[0]?.size || dealSize?.name}
           </p>
 
           {/* Extras summary in comma-separated format */}
@@ -122,6 +198,16 @@ const OrderItem = ({
                   <span key={index}>
                     {extra.name}
                     {index < allSelectedExtras.length - 1 && ", "}
+                  </span>
+                ))}
+              </span>
+            )}
+            {allSelectedDealExtras.length > 0 && (
+              <span>
+                {allSelectedDealExtras.map((extra, index) => (
+                  <span key={index}>
+                    {extra.name}
+                    {index < allSelectedDealExtras.length - 1 && ", "}
                   </span>
                 ))}
               </span>
@@ -191,6 +277,12 @@ const OrderItem = ({
           )}
         </div>
       </div>
+      {isModalOpen && selectedPizzaDetail && (
+        <PizzaSelectedModal
+          selectedPizza={selectedPizzaDetail}
+          closeModal={closeModal}
+        />
+      )}
 
       {/* Modals */}
       {isMessageModalOpen && (
