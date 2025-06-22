@@ -11,7 +11,6 @@ const FoodCategories = ({ menu = [] }) => {
     (item, categoryData) => {
       if (isInfoModalTriggered) return;
       setSelectedPizza({ items: item, ...categoryData });
-      console.log("sedllllll", { item, ...categoryData });
       setIsModalOpen(true);
     },
     [isInfoModalTriggered]

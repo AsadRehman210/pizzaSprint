@@ -45,7 +45,7 @@ const FoodCard = ({
     >
       {/* show number of quantity */}
       {cartItem && (
-        <div className="absolute -top-2 -left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-md z-10 shadow">
+        <div className="absolute -top-2 -left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-md shadow">
           {cartItem.quantity}
         </div>
       )}

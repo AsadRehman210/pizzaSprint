@@ -6,6 +6,7 @@ import ModalHeader from "./PizzaSelectedModal/ModalHeader";
 import OptionGroupHeader from "./PizzaSelectedModal/OptionGroupHeader";
 import QuantitySelector from "./PizzaSelectedModal/QuantitySelector";
 import AddToCartButton from "./PizzaSelectedModal/AddToCartButton";
+import DealItem from "./PizzaSelectedModal/DealItem";
 
 // Helper functions
 const getPrice = (priceObj, isDelivery) => {
@@ -271,110 +272,15 @@ const PizzaSelectedModal = ({ selectedPizza, closeModal }) => {
     if (selectedPizza?.items?.itemType !== "deal") return null;
 
     return selectedPizza?.items?.dealItems?.map((dealItem, dealIndex) => (
-      <div key={dealIndex} className="flex flex-col gap-4">
-        {dealItem.selectableItems && (
-          <>
-            <div className="flex justify-between">
-              <div className="flex flex-col">
-                <h4 className="text-base font-bold">
-                  {dealItem.name || "Your Choice"}
-                </h4>
-                <p className="text-sm font-normal font-poppins">
-                  {dealItem.isSelectable ? "Choose 1" : "Included"}
-                </p>
-              </div>
-              <div className="flex items-center">
-                <p className="text-xs text-white bg-[#00274D] px-3 py-1 rounded">
-                  {dealItem.isSelectable ? "Required" : "Included"}
-                </p>
-              </div>
-            </div>
-
-            <ul className="flex flex-col gap-2">
-              {dealItem.selectableItems.map((item, index) => (
-                <li key={index} className="flex items-center gap-4">
-                  <input
-                    type={dealItem.isSelectable ? "radio" : "checkbox"}
-                    name={`deal-${dealIndex}`}
-                    id={`deal-${dealIndex}-${index}`}
-                    checked={
-                      dealItem.isSelectable
-                        ? selectedDealItem?.id === item.id
-                        : true
-                    }
-                    onChange={() =>
-                      dealItem.isSelectable && handleDealItemChange(item)
-                    }
-                    disabled={!dealItem.isSelectable}
-                    className={`appearance-none border border-[#00274D] rounded-full w-4 h-4 ${
-                      dealItem.isSelectable
-                        ? "checked:bg-[#00274D] checked:border-[#00274D]"
-                        : "bg-gray-200 border-gray-300"
-                    } focus:outline-none`}
-                  />
-                  <label
-                    htmlFor={`deal-${dealIndex}-${index}`}
-                    className="flex justify-between w-full"
-                  >
-                    <p className="text-sm font-medium font-poppins">
-                      {item.name}
-                    </p>
-                    {!dealItem.isSelectable && (
-                      <p className="text-sm font-medium font-poppins">
-                        Included
-                      </p>
-                    )}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {dealItem.group?.map((group, groupIndex) => (
-          <div key={groupIndex}>
-            <OptionGroupHeader
-              title={group.name}
-              description={
-                group.selectionRequired ? "Choose at least one" : "Optional"
-              }
-              isRequired={group.selectionRequired}
-            />
-
-            <ul className="my-2 space-y-2">
-              {group.groupOption?.map((option, optionIndex) => (
-                <li key={optionIndex} className="flex items-center gap-4">
-                  <input
-                    type={group.selectionRequired ? "radio" : "checkbox"}
-                    id={`${group.name}-${dealIndex}-${optionIndex}`}
-                    checked={selectedDealExtras.some(
-                      (extra) => extra.id === option.id
-                    )}
-                    onChange={() => handleDealExtraChange(option)}
-                    className={`appearance-none h-5 w-5 border border-gray-300 ${
-                      group.selectionRequired
-                        ? "rounded-full checked:bg-[#00274D] checked:border-[#00274D]"
-                        : "rounded-sm checked:bg-[#00274D] checked:border-[#00274D]"
-                    } focus:outline-none focus:ring-none cursor-pointer
-                      checked:before:content-['✔'] checked:before:text-white checked:before:absolute checked:before:inset-0 checked:before:flex checked:before:justify-center checked:before:items-center relative`}
-                  />
-                  <label
-                    htmlFor={`${group.name}-${dealIndex}-${optionIndex}`}
-                    className="flex justify-between w-full"
-                  >
-                    <p className="text-sm font-medium font-poppins">
-                      {option.name}
-                    </p>
-                    <p className="text-sm font-medium font-poppins">
-                      {option.price[0]?.price} €
-                    </p>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+      <DealItem
+        key={dealIndex}
+        dealItem={dealItem}
+        dealIndex={dealIndex}
+        selectedDealItem={selectedDealItem}
+        handleDealItemChange={handleDealItemChange}
+        selectedDealExtras={selectedDealExtras}
+        handleDealExtraChange={handleDealExtraChange}
+      />
     ));
   };
 
@@ -434,7 +340,7 @@ const PizzaSelectedModal = ({ selectedPizza, closeModal }) => {
   useModalScrollLock();
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
       <div className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[calc(100vh-6rem)] overflow-hidden flex flex-col">
         <ModalHeader title={selectedPizza?.items?.name} onClose={closeModal} />
 
