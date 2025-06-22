@@ -20,7 +20,7 @@ const FoodSelection = () => {
       ? item.sizes[0]?.deliveryPrice
       : item.sizes[0]?.takeAwayPrice;
 
-    const extrasPrice = item.extras.reduce((sum, group) => {
+    const extrasPrice = (item.extras || []).reduce((sum, group) => {
       return (
         sum +
         group.selectedExtras.reduce((groupSum, extra) => {
@@ -28,7 +28,7 @@ const FoodSelection = () => {
         }, 0)
       );
     }, 0);
-    const dealExtrasPrice = item.dealExtras.reduce((sum, group) => {
+    const dealExtrasPrice = (item.dealExtras || []).reduce((sum, group) => {
       return (
         sum +
         group.selectedExtras.reduce((groupSum, extra) => {
