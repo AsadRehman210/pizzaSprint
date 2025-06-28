@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/pizzaSprint/static/css/main.f652af30.css",
-    "main.js": "/pizzaSprint/static/js/main.fda3e6d3.js",
+    "main.js": "/pizzaSprint/static/js/main.13935c03.js",
     "static/css/165.cddc0dcf.chunk.css": "/pizzaSprint/static/css/165.cddc0dcf.chunk.css",
     "static/js/165.7a922d44.chunk.js": "/pizzaSprint/static/js/165.7a922d44.chunk.js",
     "static/js/151.1037703b.chunk.js": "/pizzaSprint/static/js/151.1037703b.chunk.js",
@@ -14,13 +14,13 @@
     "static/media/search.svg": "/pizzaSprint/static/media/search.30f6d870c985c920c232d5010d9892d9.svg",
     "static/media/info.svg": "/pizzaSprint/static/media/info.ff42cd83f484040bd2440a3242eefea4.svg",
     "main.f652af30.css.map": "/pizzaSprint/static/css/main.f652af30.css.map",
-    "main.fda3e6d3.js.map": "/pizzaSprint/static/js/main.fda3e6d3.js.map",
+    "main.13935c03.js.map": "/pizzaSprint/static/js/main.13935c03.js.map",
     "165.cddc0dcf.chunk.css.map": "/pizzaSprint/static/css/165.cddc0dcf.chunk.css.map",
     "165.7a922d44.chunk.js.map": "/pizzaSprint/static/js/165.7a922d44.chunk.js.map",
     "151.1037703b.chunk.js.map": "/pizzaSprint/static/js/151.1037703b.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f652af30.css",
-    "static/js/main.fda3e6d3.js"
+    "static/js/main.13935c03.js"
   ]
 }
